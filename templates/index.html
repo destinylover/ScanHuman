@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다중 목표 추적 시스템</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='sw_project_css.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>SW_project</h1>
+            </div>
+            <div class="header-right">
+                <button type="button" onclick="alert('로그인 기능은 고도의 구현화를 통해 구현할예정.')">로그인</button>
+                <button type="button" onclick="alert('로그아웃 기능은 고도의 구현화를 통해 구현할예정.')">로그아웃</button>
+            </div>
+        </header>
+        <div class="main-content">
+            <div class="camera-section">
+                <h2>별내역 카메라-1</h2>
+                <div class="camera-feed">
+                    <img src="/video_feed" alt="Camera Feed" />
+                </div>
+            </div>
+            <div class="data-section">
+                <div class="search-section">
+                    <label for="start-date">시작일:</label>
+                    <input type="date" id="start-date" name="start-date">
+                    <label for="end-date">종료일:</label>
+                    <input type="date" id="end-date" name="end-date">
+                    <button type="button" onclick="filterData()">검색</button>
+                </div>
+                <h2>Data (Total: <span id="total-count">0</span>)</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Count</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-list">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="button-container">
+                    <button class="real-time-button" type="button" onclick="fetchRealTimeData()">실시간 조회</button>
+                </div>
+            </div>
+        </div>
+        <div class="stats-section">
+            <h3>통계 데이터 조회</h3>
+            <div class="stats-buttons">
+                <button type="button" onclick="alert('시간대별 통계는 고도의 구현화를 통해 구현할예정.')">시간대별 통계</button>
+                <button type="button" onclick="alert('날짜별 통계는 고도의 구현화를 통해 구현할예정.')">날짜별 통계</button>
+                <button type="button" onclick="alert('성별, 나이 통계는 고도의 구현화를 통해 구현할예정.')">성별, 나이 통계</button>
+            </div>
+            <div id="chart" style="width: 100%; height: 400px; margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            fetchData();
+            drawChart();
+        };
+
+        async function fetchData(startDate = '', endDate = '') {
+            try {
+                let url = '/face_counts';
+                if (startDate && endDate) {
+                    url += `?start_date=${startDate}&end_date=${endDate}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                document.getElementById('data-list').innerHTML = '';
+
+                data.forEach(row => {
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td>${row.date_time}</td>
+                        <td>${row.count}</td>
+                        <td>${row.age}</td>
+                        <td>${row.gender}</td>
+                    `;
+                    document.getElementById('data-list').appendChild(newRow);
+                });
+
+                document.getElementById('total-count').innerText = data.length;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function filterData() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+
+            if (startDate && endDate) {
+                fetchData(startDate, endDate);
+            } else {
+                alert('시작일과 종료일을 모두 입력하세요.');
+            }
+        }
+
+        async function fetchRealTimeData() {
+            try {
+                const response = await fetch('/face_counts?today=true');
+                const data = await response.json();
+                document.getElementById('data-list').innerHTML = '';
+
+                data.forEach(row => {
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td>${row.date_time}</td>
+                        <td>${row.count}</td>
+                        <td>${row.age}</td>
+                        <td>${row.gender}</td>
+                    `;
+                    document.getElementById('data-list').appendChild(newRow);
+                });
+
+                document.getElementById('total-count').innerText = data.length;
+            } catch (error) {
+                console.error('Error fetching real-time data:', error);
+            }
+        }
+
+        function drawChart() {
+            var chartDom = document.getElementById('chart');
+            var myChart = echarts.init(chartDom);
+            var option;
+
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        data: [120, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                    }
+                ]
+            };
+
+            option && myChart.setOption(option);
+        }
+    </script>
+</body>
+</html>
